@@ -1,0 +1,57 @@
+#! /usr/bin/env bash
+
+SCRIPT_DIRECTORY=$(dirname "$0")
+
+MANUAL='Usage: read-properties [-n name] [-f file] [-d delimiter] [-h]
+Options:
+  -n\t name \t\t property name, what you want
+  -f\t file \t\t property file path
+  -d\t delimiter \t delimiter to use parsing
+  -h\t\t\t show this help message'
+
+DEBUG_MSG=""
+
+verbose=0
+while getopts n:f:d:hv opt
+do
+    case $opt in
+        n) DEBUG_MSG="$DEBUG_MSG name value : $OPTARG\n"; PROPERTY_NAME=$OPTARG;;
+        f) DEBUG_MSG="$DEBUG_MSG file value : $OPTARG\n"; PROPERTY_FILE=$OPTARG;;
+        d) DEBUG_MSG="$DEBUG_MSG delim value : $OPTARG\n"; DELIMITER=$OPTARG;;
+        v) verbose=1;;
+        h) printf "$MANUAL"; exit 0 ;;
+        *) printf "$opt is not the option"; exit 1 ;;
+    esac
+done
+
+# 경고 메시지 저장 변수
+ERROR_MSG=""
+
+# 경고 메시지 출력 및 스크립트 종료
+if [ -z "$PROPERTY_FILE" ]; then
+  ERROR_MSG="${ERROR_MSG}Warning: Option -file is required but not provided.\n"
+fi
+
+if [ -z "$DELIMITER" ]; then
+  ERROR_MSG="${ERROR_MSG}Warning: Option -delim is required but not provided.\n"
+fi
+
+if [ -z "$PROPERTY_NAME" ]; then
+  ERROR_MSG="${ERROR_MSG}Warning: Option -name is required but not provided.\n"
+fi
+
+if [ $verbose -eq 1 ]; then
+  printf "$DEBUG_MSG" >&2
+fi
+
+# 경고 메시지가 있으면 출력하고 종료
+if [ -n "$ERROR_MSG" ]; then
+  printf "$ERROR_MSG" >&2
+  exit 1
+fi
+
+
+LINE=$(cat $PROPERTY_FILE | grep $PROPERTY_NAME)
+
+echo $LINE | cut -d$DELIMITER -f2 | xargs
+ 
